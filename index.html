@@ -8,13 +8,14 @@
 <meta name="apple-mobile-web-app-title" content="Banc2Touche">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1B2057">
+<meta name="b2t-version" content="2026-11-02-3">
 <meta name="description" content="Outils de banc pour coacher les matchs du Massy Essonne Handball">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-02-2">
-<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-02-2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-02-3">
+<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-02-3">
 <title>Banc2Touche</title>
 <style>
-/* Appli installée (version 2026-11-02-2) : mêmes bases que le site, polices embarquées pour le hors-ligne */
+/* Appli installée (version 2026-11-02-3) : mêmes bases que le site, polices embarquées pour le hors-ligne */
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{background:#1B2057}
 body{margin:0;font:14px system-ui,-apple-system,sans-serif}
@@ -1441,7 +1442,8 @@ function vBackup(){
       ${imp?`<div class="impbox"><p><strong>${esc(imp.name)}</strong> : ${imp.team?plural(imp.team.players.length,'joueur'):'pas d’effectif'} · ${plural(imp.matches.length,'match')}.</p><div class="row"><button class="btn primary" data-act="bkApply">Importer ces données</button><button class="btn ghost" data-act="bkCancel">Annuler</button></div></div>`:''}
       ${u.impErr?`<p class="err">${esc(u.impErr)}</p>`:''}
     </div>
-  </div>`;
+  </div>
+  ${(()=>{const mv=document.querySelector('meta[name="b2t-version"]');return mv?`<p class="hint">Version de l’appli : <strong>${esc(mv.content)}</strong></p>`:''})()}`;
 }
 const TVIEWS={team:vTeam,profile:vProfile,season:vSeason,backup:vBackup};
 const TEAM_NAV=[['team','Joueurs'],['season','Saison'],['backup','Sauvegarde']];
@@ -1584,7 +1586,13 @@ start();
 </script>
 
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+// Mises à jour : vérifie la version à chaque ouverture et recharge une fois quand une nouvelle version prend la main
+if('serviceWorker' in navigator){
+  var hadCtrl=!!navigator.serviceWorker.controller,reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadCtrl&&!reloaded){reloaded=true;location.reload()}});
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update()}).catch(function(){})});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){navigator.serviceWorker.getRegistration().then(function(r){if(r)r.update()}).catch(function(){})}});
+}
 </script>
 </body>
 </html>
