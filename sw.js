@@ -1,5 +1,5 @@
-// Banc2Touche : fonctionnement hors connexion (version 2026-11-02-1)
-const CACHE='banc2touche-2026-11-02-1';
+// Banc2Touche : fonctionnement hors connexion (version 2026-11-02-2)
+const CACHE='banc2touche-2026-11-02-2';
 const ASSETS=["./", "index.html", "manifest.webmanifest", "mehb-logo.png", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "barlow-400.woff2", "barlow-500.woff2", "barlow-600.woff2", "barlow-700.woff2", "barlow-condensed-600.woff2", "barlow-condensed-700.woff2", "barlow-condensed-800.woff2", "barlow-condensed-700-italic.woff2", "barlow-condensed-800-italic.woff2"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

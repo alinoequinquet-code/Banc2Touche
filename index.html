@@ -10,11 +10,11 @@
 <meta name="theme-color" content="#1B2057">
 <meta name="description" content="Outils de banc pour coacher les matchs du Massy Essonne Handball">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-02-2">
+<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-02-2">
 <title>Banc2Touche</title>
 <style>
-/* Appli installée (version 2026-11-02-1) : mêmes bases que le site, polices embarquées pour le hors-ligne */
+/* Appli installée (version 2026-11-02-2) : mêmes bases que le site, polices embarquées pour le hors-ligne */
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{background:#1B2057}
 body{margin:0;font:14px system-ui,-apple-system,sans-serif}
@@ -497,46 +497,6 @@ function normalize(m){
   if(!m.lineup||typeof m.lineup!=='object')m.lineup={};
   return m;
 }
-function exampleMatch(seed,id,opp,dayOff){
-  seed=seed||11;
-  const m=newMatch(EXP.map(([pid,prenom,nom,poste,num])=>({id:pid,num,name:prenom+' '+nom.charAt(0)+'.',pos:poste,alt:EXALT[pid]||[]})));
-  const d=new Date(Date.now()+(dayOff||0)*864e5);
-  Object.assign(m,{id:id||'exemple',example:true,opponent:opp||'HBC Exemple',venue:'Gymnase (exemple)',competition:'Match d’exemple',date:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')});
-  m.lineup={GB:'p1',AG:'p3',ARG:'p7',DC:'p9',ARD:'p11',AD:'p14',PIV:'p18'};
-  m.scout={def:'0-6',attack:'Jeu rapide en 2e vague après chaque arrêt. Croisés arrière gauche / demi-centre.',gkNum:'16',gkNote:'Fort sur les tirs hauts, plus lent en bas côté opposé.',
-    danger:[{id:'d1',num:'8',pos:'ARG',note:'Gaucher, tir en suspension aux 9 m'},{id:'d2',num:'5',pos:'PIV',note:'Bloque bien, cherche le duel au centre'}],
-    keys:'Monter le ballon vite après chaque arrêt\nAvancer sur le n°8 dès qu’il reçoit\nFixer avant de donner à l’aile'};
-  let s=seed>>>0;const r=()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296};const pk=a=>a[Math.floor(r()*a.length)];
-  const ZC={'AIL-G':[1.4,2.6],'AIL-D':[18.6,2.6],'6M-G':[5.6,7.2],'6M-C':[10,7.6],'6M-D':[14.4,7.2],'9M-G':[4.6,10.6],'9M-C':[10,11],'9M-D':[15.4,10.6],'LOIN':[10,13.2]};
-  const ZU=['AIL-G','AIL-D','6M-G','6M-C','6M-D','9M-G','9M-C','9M-D','9M-C','9M-G','LOIN'];
-  const ZO=['9M-G','9M-G','9M-C','AIL-G','AIL-D','6M-C','9M-D','6M-D','LOIN'];
-  const ZP={'AIL-G':['p3','p3','p23'],'AIL-D':['p14'],'6M-G':['p18','p24'],'6M-C':['p18','p18','p24'],'6M-D':['p18','p24'],'9M-G':['p7','p7','p21'],'9M-C':['p9','p10'],'9M-D':['p11'],'LOIN':['p7','p9','p11'],'7M':['p9','p14']};
-  const CB={'AIL-G':{3:2,6:2,9:3,7:2,1:1},'AIL-D':{1:2,4:2,7:3,9:2,3:1},'6M-G':{7:2,8:2,9:2,6:1,5:1},'6M-C':{7:2,8:1,9:2,4:1,6:1,5:1},'6M-D':{7:2,8:2,9:2,4:1,5:1},
-    '9M-G':{7:4,3:3,8:1,1:1,9:1},'9M-C':{7:2,9:2,1:2,3:2,5:1},'9M-D':{9:4,1:3,8:1,3:1,7:1},'LOIN':{1:2,3:2,7:1,9:1},'7M':{1:1,3:2,7:2,9:2,5:1}};
-  const wpick=o=>{const ks=Object.keys(o);let x=r()*ks.reduce((a,k)=>a+o[k],0);for(const k of ks){x-=o[k];if(x<0)return +k}return +ks[0]};
-  // Le gardien n°1 arrête mieux les tirs de loin, le n°12 les tirs proches
-  const saveBias=(gk,zone)=>gk==='p1'?(zone&&(zone.startsWith('9M')||zone==='LOIN')?.12:-.06):(zone&&(zone.startsWith('6M')||zone.startsWith('AIL'))?.1:-.05);
-  let ts=Date.now()+(dayOff||0)*864e5-90*60000;
-  for(const half of [1,2]) for(let i=0;i<50;i++){
-    ts+=40000;const team=r()<.5?'us':'opp';
-    if(r()<.8){
-      let phase='placed';const ph=r();if(ph<.15)phase='ca';else if(ph<.21)phase='seven';
-      let zone=pk(team==='us'?ZU:ZO),x,y;
-      if(phase==='seven'){zone='7M';x=10;y=7}
-      else{const c=ZC[zone];x=Math.max(.2,Math.min(19.8,Math.round((c[0]+(r()-.5)*1.6)*10)/10));y=Math.max(.3,Math.min(14,Math.round((c[1]+(r()-.5)*1.6)*10)/10));zone=zoneAt(x,y)}
-      const gk=team==='opp'?((half===2&&i>=30)?'p12':'p1'):null;
-      let pg=phase==='seven'?.74:team==='us'?(phase==='placed'?.52:.76):(phase==='placed'?.46:.64);if(gk&&phase!=='seven')pg-=saveBias(gk,zone);
-      const q=r(),res=q<pg?'goal':q<pg+.32?'saved':q<pg+.42?'miss':'blocked';
-      const e={id:uid(),ts,half,team,type:'shot',p:null,res,zone,x,y,cage:(res==='goal'||res==='saved')?wpick(CB[zone]||CB['9M-C']):null,phase};
-      if(team==='us'){e.def=(half===2&&i>=25)?'1-5':'0-6';if(r()<.85)e.p=pk(ZP[zone]||ZP['9M-C'])}else e.gk=gk;
-      m.events.push(e);
-    }else{const e={id:uid(),ts,half,team,type:'loss',p:null};if(team==='us'){e.def='0-6';if(r()<.8)e.p=pk(['p7','p9','p9','p10','p11','p18','p18','p3','p14','p21','p1'])}m.events.push(e)}
-  }
-  if(m.id==='exemple')m.notes=[{id:'n1',ts:Date.now()-80*60000,half:1,min:'8',tag:'Défense',text:'Le n°8 tire au-dessus de notre bloc à chaque croisé : avancer sur lui plus tôt.'},
-           {id:'n2',ts:Date.now()-62*60000,half:1,min:'22',tag:'Attaque',text:'L’aile droite est souvent libre quand on fixe côté gauche.'}];
-  return m;
-}
-
 /* ---------- État ---------- */
 const PHASES=[
   ['avant','Avant','Avant le match',[['match','Feuille'],['compo','Compo'],['scout','Adversaire']]],
@@ -603,7 +563,7 @@ async function initCloud(){
       const v=d.data();if(!v)continue;
       if(d.id==='team'){
         teamSeen=true;
-        if(Array.isArray(v.players)&&!v.example&&(TEAM.example||(v.updatedAt||0)>(TEAM.updatedAt||0))){TEAM=v;LS.set('hb.team',TEAM);changed=true}
+        if(Array.isArray(v.players)&&!v.example&&(TEAM.example||TEAM.fresh||(v.updatedAt||0)>(TEAM.updatedAt||0))){TEAM=v;LS.set('hb.team',TEAM);changed=true}
         else if(!TEAM.example&&(TEAM.updatedAt||0)>(v.updatedAt||0))dirty.add('team');
         continue;
       }
@@ -616,7 +576,7 @@ async function initCloud(){
     if(!teamSeen&&!TEAM.example)dirty.add('team');
     IDX.filter(x=>!seen.has(x.id)).forEach(x=>{if(getMatch(x.id))dirty.add(x.id)});
     // Stockage local indisponible : reprendre le dernier match du compte
-    if(S.m.example&&!LS.ok&&IDX.length){const last=IDX.slice().sort((a,b)=>b.updatedAt-a.updatedAt)[0];const m=getMatch(last.id);if(m){S.m=normalize(m);changed=true}}
+    if(!LS.ok&&IDX.length&&!S.m.opponent&&!S.m.events.length){const last=IDX.slice().sort((a,b)=>b.updatedAt-a.updatedAt)[0];const m=getMatch(last.id);if(m){S.m=normalize(m);changed=true}}
     if(dirty.size)flushCloud();else setSync('cloud');
     if(changed)renderAll();else if(S.view==='history'||S.mode==='team')renderView();
   }catch(e){if(DB)setSync('error')}
@@ -917,7 +877,7 @@ function vMatch(){
   if(m.example){
     conv=`<div class="tiles conv">${m.players.slice().sort(numSort).map(p=>`<div class="tile ${p.pos==='GB'?'gk':''}"><b>${esc(p.num)}</b><span>${esc(p.name)}</span></div>`).join('')}</div><p class="hint">Dans un vrai match, tu choisis ici les joueurs de ton effectif.</p>`;
   }else if(TEAM.example||!TEAM.players.length){
-    conv=`<p class="hint">Crée d’abord ton effectif dans l’onglet Effectif. Tu pourras ensuite convoquer tes joueurs ici d’une touche.</p><div class="row"><button class="btn primary" data-act="mode" data-v="team">Aller à l’effectif</button></div>`;
+    conv=`<p class="hint">Ajoute d’abord tes joueurs dans l’onglet Effectif, ou importe une sauvegarde. Tu pourras ensuite les convoquer ici d’une touche.</p><div class="row"><button class="btn primary" data-act="mode" data-v="team">Aller à l’effectif</button></div>`;
   }else{
     const ps=TEAM.players.slice().sort(teamSort),full=m.players.length>=16,extra=m.players.filter(p=>!tById(p.id));
     conv=`<div class="tiles conv">${ps.map(p=>{const on=sel.has(p.id);return `<button class="tile ${p.poste==='GB'?'gk':''}" data-act="convoke" data-id="${p.id}" aria-pressed="${on}" ${!on&&full?'disabled':''}><b>${esc(p.num||'?')}</b><span>${esc(tShort(p))}${p.poste?' · '+p.poste:''}</span></button>`}).join('')}</div>${extra.length?`<p class="hint">Aussi sur la feuille, hors effectif : ${extra.map(p=>esc('n°'+p.num+' '+p.name)).join(', ')}.</p>`:''}`;
@@ -931,7 +891,7 @@ function vMatch(){
       <div class="f">On joue<div class="seg">${[['dom','À domicile'],['ext','À l’extérieur']].map(([v,l])=>`<button data-act="side" data-v="${v}" aria-pressed="${m.side===v}">${l}</button>`).join('')}</div></div>
     </div>
     <div class="card"><div class="card-head"><h2>Joueurs convoqués<span class="count">${m.players.length}/16</span></h2>${m.example?'':'<button class="btn ghost" data-act="mode" data-v="team">Gérer l’effectif</button>'}</div>
-      ${m.example?'':'<p class="hint">Touche un joueur pour l’ajouter à la feuille de match ou l’en retirer.</p>'}${conv}
+      ${m.example||!TEAM.players.length?'':'<p class="hint">Touche un joueur pour l’ajouter à la feuille de match ou l’en retirer.</p>'}${conv}
     </div>
   </div>`;
 }
@@ -1273,25 +1233,10 @@ function vHistory(){
 
 /* ---------- Équipe : base de données joueurs ---------- */
 const POSTE_ORDER={GB:0,AG:1,ARG:2,DC:3,ARD:4,AD:5,PIV:6};
-const EXP=[
-  ['p1','Hugo','Bernard','GB','1','2003-04-12','Très bon sur les tirs de loin, relance rapide vers les ailes.','Tirs à ras du sol côté ailes, placement sur les 7 m.'],
-  ['p12','Nathan','Roux','GB','12','2005-09-03','Réflexes sur les tirs proches, présence face au pivot.','Lecture des tirs en suspension aux 9 m.'],
-  ['p3','Théo','Laurent','AG','3','2004-01-21','Vitesse en contre-attaque.','Tirs en angle fermé.'],
-  ['p7','Lucas','Martin','ARG','7','2002-06-30','Tir en suspension aux 9 m, gros volume de jeu.','Choix de passe sous pression.'],
-  ['p9','Enzo','Dubois','DC','9','2003-11-08','Vision du jeu, fixation des défenseurs.','Tir de loin.'],
-  ['p10','Maël','Petit','DC','10','2006-02-14','',''],
-  ['p11','Noah','Garnier','ARD','11','2004-08-19','Gaucher, tir à la hanche.','Repli défensif.'],
-  ['p14','Jules','Fontaine','AD','14','2005-05-02','Finition sur l’aile.',''],
-  ['p18','Adam','Kader','PIV','18','2003-03-27','Gagne ses duels au contact.','Pertes de balle à la réception.'],
-  ['p21','Sacha','Vidal','ARG','21','2006-10-11','',''],
-  ['p23','Tom','Carré','AG','23','2005-12-05','',''],
-  ['p24','Liam','Henry','PIV','24','2004-07-23','','']];
-const EXALT={p10:['ARG','ARD'],p21:['DC'],p23:['AD'],p24:['ARD'],p9:['ARG'],p3:['AD']};
-function exampleTeam(){return{kind:'team',example:true,updatedAt:0,players:EXP.map(([id,prenom,nom,poste,num,naissance,forts,travail])=>({id,prenom,nom,poste,postes2:EXALT[id]||[],num,naissance,forts,travail}))}}
 const alts=p=>Array.isArray(p&&p.postes2)?p.postes2.filter(c=>c&&c!==p.poste):[];
 function altOf(mp){const t=TEAM&&tById(mp.id);return t?alts(t):(Array.isArray(mp.alt)?mp.alt:[])}
 function posteTxt(p,long){const a=alts(p);if(!p.poste&&!a.length)return 'Poste à définir';return (p.poste?(long?POSTNAME[p.poste]:p.poste):'Poste principal à définir')+(a.length?` · aussi ${a.join(', ')}`:'')}
-let TEAM=null,EXCACHE=null;
+let TEAM=null;
 const tById=id=>TEAM.players.find(p=>p.id===id);
 const tFull=p=>[p.prenom,p.nom].filter(Boolean).join(' ')||'Joueur sans nom';
 const tShort=p=>((p.prenom||'')+(p.nom?' '+p.nom.charAt(0)+'.':'')).trim()||'Sans nom';
@@ -1314,10 +1259,11 @@ function loadTeam(){
     (m.events||[]).forEach(e=>{if(e.p&&map[e.p])e.p=map[e.p];if(e.gk&&map[e.gk])e.gk=map[e.gk]});
     m.teamLinked=true;m.updatedAt=Date.now();storeLocal(m);
   });
-  if(players.length){TEAM={kind:'team',players,updatedAt:Date.now()};LS.set('hb.team',TEAM)}else TEAM=exampleTeam();
+  if(players.length){TEAM={kind:'team',players,updatedAt:Date.now()};LS.set('hb.team',TEAM)}
+  else{TEAM={kind:'team',players:SEED.map(seedTP),seedDone:true,fresh:true,updatedAt:0};LS.set('hb.team',TEAM)}
 }
 function touchTeam(){
-  TEAM.updatedAt=Date.now();if(TEAM.example)return;LS.set('hb.team',TEAM);
+  TEAM.updatedAt=Date.now();delete TEAM.fresh;if(TEAM.example)return;LS.set('hb.team',TEAM);
   if(DB){dirty.add('team');setSync('pending');clearTimeout(cloudTimer);cloudTimer=setTimeout(flushCloud,1400)}
 }
 // Liste nominative : à importer depuis un fichier de sauvegarde (page Sauvegarde)
@@ -1339,9 +1285,7 @@ function syncSnap(tp){
   if(!S.m||S.m.example)return;const p=S.m.players.find(x=>x.id===tp.id);if(!p)return;
   p.num=tp.num;p.name=tShort(tp);p.pos=tp.poste;p.alt=alts(tp);touch();
 }
-function EXMS(){return EXCACHE||(EXCACHE=[exampleMatch(),exampleMatch(29,'exemple-2','AS Démo',-7),exampleMatch(47,'exemple-3','US Modèle',-14)])}
 function teamMatches(){
-  if(TEAM.example)return EXMS();
   return IDX.map(x=>getMatch(x.id)).filter(m=>m&&!m.example).map(normalize).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 }
 function playerSeason(pid,ms){
@@ -1378,7 +1322,7 @@ function vTeam(){
     :`<button class="btn" data-act="tselAll">${nsel===ps.length?'Tout désélectionner':'Tout sélectionner'}</button><button class="btn danger" data-act="tdelMany" ${nsel?'':'disabled'}>Supprimer (${nsel})</button><button class="btn ghost" data-act="tdelCancel">Terminé</button>`}
   </div></div></div>`:''}
   ${nl.length&&!TEAM.example?`<div class="banner"><span>${plural(nl.length,'joueur')} sans poste. Ouvre chaque fiche pour indiquer le poste et le numéro de maillot.</span></div>`:''}
-  ${ps.length?'':'<div class="card"><h2>Aucun joueur</h2><p class="hint">Ajoute tes joueurs un par un : nom, prénom, date de naissance, poste et numéro. Tu pourras ensuite les convoquer sur la feuille de match.</p></div>'}
+  ${ps.length?'':'<div class="card"><h2>Aucun joueur</h2><p class="hint">Ajoute tes joueurs un par un (nom, prénom, date de naissance, poste et numéro) ou importe un fichier de sauvegarde. Tu pourras ensuite les convoquer sur la feuille de match.</p><div class="row"><button class="btn primary" data-act="taddp">Ajouter un joueur</button><button class="btn" data-act="tgo" data-v="backup">Importer une sauvegarde</button></div></div>'}
   ${gl.length?`<section class="tsec"><h2>Gardiens<span class="count">${gl.length}</span></h2><div class="pcards">${gl.map(p=>pcard(p,ms,del)).join('')}</div></section>`:''}
   ${fl.length?`<section class="tsec"><h2>Joueurs de champ<span class="count">${fl.length}</span></h2><div class="pcards">${fl.map(p=>pcard(p,ms,del)).join('')}</div></section>`:''}
   ${nl.length?`<section class="tsec"><h2>Poste à définir<span class="count">${nl.length}</span></h2><div class="pcards">${nl.map(p=>pcard(p,ms,del)).join('')}</div></section>`:''}`;
@@ -1617,7 +1561,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='opp-a
 function start(){
   loadTeam();
   const saved=LS.get('hb.ui',{});
-  S.mode=saved.mode==='team'?'team':'match';
+  S.mode=saved.mode==='match'?'match':'team';
   if(['team','season','profile','backup'].includes(saved.tview))S.tview=saved.tview;
   S.tp=saved.tp||null;if(S.tview==='profile'&&!tById(S.tp))S.tview='team';
   if(saved.view&&VIEWS[saved.view])S.view=saved.view;
@@ -1627,8 +1571,8 @@ function start(){
   if(saved.oppDef)S.ui.oppDef=saved.oppDef;
   if(typeof saved.autoSwap==='boolean')S.ui.autoSwap=saved.autoSwap;
   const cur=LS.get('hb.cur',null),m=cur&&getMatch(cur);
-  S.m=(m&&!m.example)?normalize(m):exampleMatch();
-  if(S.m.example)storeLocal(S.m);
+  S.m=(m&&!m.example)?normalize(m):newMatch([]);
+  if(!m||m.example)LS.set('hb.cur',S.m.id);
   S.ui.gk=(saved.gk&&pById(saved.gk))?saved.gk:defaultGK();
   S.ui.bilPer=S.ui.half;
   const tac=LS.get('hb.tac',null);S.tac=(tac&&tac.pieces)?tac:defaultTac();
