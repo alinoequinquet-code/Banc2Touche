@@ -1,0 +1,19 @@
+BANC2TOUCHE · appli iPad (MEHB)
+
+1. Mettre ces fichiers en ligne (une seule fois), par exemple avec GitHub Pages :
+   - sur github.com, crée un dépôt public nommé banc2touche ;
+   - « uploading an existing file » : ajoute tous les fichiers de ce dossier (pas le dossier lui-même), puis « Commit changes » ;
+   - Settings > Pages > Source : « Deploy from a branch », branche main, dossier / (root) > Save ;
+   - après 1 à 2 minutes, l'adresse est https://TON-PSEUDO.github.io/banc2touche/
+
+2. Installer sur l'iPad :
+   - ouvre cette adresse dans Safari (avec du réseau) ;
+   - bouton Partager > « Sur l'écran d'accueil » > Ajouter ;
+   - lance l'appli une première fois avec du réseau : ensuite elle marche sans connexion.
+
+3. Mettre ton effectif :
+   - Effectif > Sauvegarde > Choisir un fichier : prends le fichier effectif-mehb-hand7-12-16.json
+     (garde-le sur l'iPad, ne le mets pas en ligne : il contient les noms et dates de naissance).
+
+Les données restent sur l'iPad. Fais une sauvegarde après chaque match (Effectif > Sauvegarde > Enregistrer une sauvegarde).
+Ne supprime pas l'appli de l'écran d'accueil sans sauvegarde : ses données seraient effacées.
