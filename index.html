@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-title" content="Banc2Touche">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1B2057">
-<meta name="b2t-version" content="2026-11-04-2">
+<meta name="b2t-version" content="2026-11-04-3">
 <meta name="description" content="Outils de banc pour coacher les matchs du Massy Essonne Handball">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-04-2">
-<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-04-2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-04-3">
+<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-04-3">
 <title>Banc2Touche</title>
 <style>
-/* Appli installée (version 2026-11-04-2) : mêmes bases que le site, polices embarquées pour le hors-ligne */
+/* Appli installée (version 2026-11-04-3) : mêmes bases que le site, polices embarquées pour le hors-ligne */
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{background:#1B2057}
 body{margin:0;font:14px system-ui,-apple-system,sans-serif}
@@ -1781,6 +1781,13 @@ function buildMatchPdf(JS,m,logo){
     if(!rows.length){F('italic',8,PCOL.muted);T('Aucune donnée.',x+1.5,yy+h+3.8);h+=RH}
     return h;
   }
+  // tableau qui continue sur la page suivante (en-tête répété) plutôt que de laisser un trou
+  function flowTable(x,cols,head,rows,left){
+    let i=0;
+    do{let fit=Math.floor((BOT-y)/RH)-1;if(fit<Math.min(3,rows.length-i)){newPage();fit=Math.floor((BOT-y)/RH)-1}
+      const rest=rows.length-i-fit;if(rest>0&&rest<3&&fit>3)fit=Math.max(3,fit-(3-rest));
+      const part=rows.slice(i,i+Math.max(1,fit));y+=table(x,y,cols,head,part,left);i+=part.length;if(i<rows.length)newPage()}while(i<rows.length);
+  }
   function court(x,yy,w,marks){
     const s=w/20,h=14.4*s,P=(px,py)=>[x+px*s,yy+py*s];
     fill(PCOL.floor);doc.rect(x,yy-1.4*s,w,h+1.4*s,'F');
@@ -1819,11 +1826,11 @@ function buildMatchPdf(JS,m,logo){
   if(logo){try{doc.addImage(logo,'PNG',M,5,24,25.8)}catch(e){}}
   F('bold',8.5,PCOL.gold);T('FICHE DE FIN DE MATCH',M+30,11);
   F('bolditalic',18,PCOL.white);let ttl=pdfT(`MEHB vs ${m.opponent||'adversaire'}`.toUpperCase());while(ttl.length>6&&doc.getTextWidth(ttl)>118)ttl=ttl.slice(0,-2)+'…';doc.text(ttl,M+30,20);
-  F('normal',9,PCOL.light);T([fmtDate(m.date),m.side==='ext'?'À l’extérieur':'À domicile',m.competition,m.venue].filter(Boolean).join(' · '),M+30,27);
+  F('normal',9,PCOL.light);{const ml=doc.splitTextToSize(pdfT([fmtDate(m.date),m.side==='ext'?'À l’extérieur':'À domicile',m.competition,m.venue].filter(Boolean).join(' · ')),104).slice(0,2);doc.text(ml,M+30,26.5,{lineHeightFactor:1.25})}
   F('bold',26,PCOL.white);T(`${sc.us} – ${sc.op}`,W-M,21,{align:'right'});F('normal',7,PCOL.light);T('BUTS RELEVÉS · MEHB – ADVERSAIRE',W-M,27,{align:'right'});
   y=44;
   // ----- résumé -----
-  section('Résumé du match',`${L.length} actions relevées`);
+  section('Résumé du match',`${plural(L.length,'action')} relevée${L.length>1?'s':''}`);
   const kp=[['Buts',`${goals(us)} – ${goals(op)}`,'MEHB – adversaire'],['Efficacité au tir',`${pct(goals(us),us.length)} / ${pct(goals(op),op.length)}`,`MEHB ${goals(us)}/${us.length} · adv. ${goals(op)}/${op.length}`],['Pertes de balle',`${cnt(L,'us','loss')} / ${cnt(L,'opp','loss')}`,'MEHB / adversaire'],['% arrêts',`${pct(gU.s,gU.t)} / ${pct(gO.s,gO.t)}`,`nos GB ${gU.s}/${gU.t} · leur GB ${gO.s}/${gO.t}`]];
   const kw=(CW-6)/4;
   kp.forEach((k,i)=>{const x=M+i*(kw+2);fill(PCOL.soft);doc.roundedRect(x,y,kw,19,2,2,'F');F('bold',6.6,PCOL.muted);T(k[0].toUpperCase(),x+3,y+5);F('bold',13,PCOL.navy);T(k[1],x+3,y+12);F('normal',6.4,PCOL.muted);T(k[2],x+3,y+16.5)});
@@ -1833,7 +1840,7 @@ function buildMatchPdf(JS,m,logo){
   // ----- attaque et défense -----
   const zoneMarks=(a,team)=>{const by={};a.forEach(e=>{if(!e.zone||!ZPOS[e.zone])return;const z=by[e.zone]||(by[e.zone]={t:0,g:0});z.t++;if(e.res==='goal')z.g++});return Object.entries(by).map(([k,z])=>{const r=z.g/z.t,[zx,zy]=ZPOS[k];return{x:zx,y:zy,r:1.25,col:cmix(PCOL.good,PCOL.bad,team==='us'?r:1-r),t1:`${Math.round(r*100)} %`,t2:`${k==='7M'?'7 m ':''}${z.g}/${z.t}`}})};
   const phaseRows=a=>PH.map(([k,,l])=>{const x=a.filter(e=>e.phase===k);return x.length?[l,`${goals(x)}/${x.length}`,pct(goals(x),x.length)]:null}).filter(Boolean);
-  const espRows=a=>ESP.map(k=>{const x=a.filter(e=>espOf(e)===k);return x.length?['Espace '+k,`${goals(x)}/${x.length}`,pct(goals(x),x.length)]:null}).filter(Boolean);
+  const espRows=a=>a.some(e=>espOf(e))?ESP.map(k=>{const x=a.filter(e=>espOf(e)===k);return x.length?['Espace '+k,`${goals(x)}/${x.length}`,pct(goals(x),x.length)]:['Espace '+k,'–','–']}):[];
   function shotBlock(title,a,team){
     section(title,`${goals(a)} but${goals(a)>1?'s':''} sur ${a.length} tirs · ${pct(goals(a),a.length)}`,72);
     const cw=84,s=cw/20,ch=14.4*s+1.4*s,pr=phaseRows(a),er=espRows(a),rw=CW-cw-8,rx=M+cw+8;
@@ -1846,7 +1853,7 @@ function buildMatchPdf(JS,m,logo){
   }
   shotBlock('Attaque MEHB',us,'us');
   const pr=playerRows(m,L).filter(r=>r.t||r.loss).sort((a,b)=>b.g-a.g||b.t-a.t);
-  if(pr.length){need(tableH(Math.min(pr.length,16))+8);label('Joueurs',M,y+2);y+=4;y+=table(M,y,[14,60,20,22,22,18,16,14],['N°','Joueur','Poste','Buts','Tirs','%','7 m','Pertes'],pr.slice(0,16).map(r=>[r.p.num||'–',r.p.name,r.p.pos||'',{b:r.g},r.t,pct(r.g,r.t),r.t7?`${r.g7}/${r.t7}`:'–',r.loss]),[0,1,2])+5}
+  if(pr.length){need(tableH(Math.min(pr.length,4))+8);label('Joueurs',M,y+2);y+=4;flowTable(M,[14,60,20,22,22,18,16,14],['N°','Joueur','Poste','Buts','Tirs','%','7 m','Pertes'],pr.slice(0,16).map(r=>[r.p.num||'–',r.p.name,r.p.pos||'',{b:r.g},r.t,pct(r.g,r.t),r.t7?`${r.g7}/${r.t7}`:'–',r.loss]),[0,1,2]);y+=5}
   const dr=DEFS.map(d=>{const a=us.filter(e=>e.def===d),lo=L.filter(e=>e.team==='us'&&e.type==='loss'&&e.def===d).length;return a.length||lo?[d,a.length,{b:goals(a)},pct(goals(a),a.length),lo]:null}).filter(Boolean);
   if(dr.length){need(tableH(dr.length)+8);label('Contre chaque défense adverse',M,y+2);y+=4;y+=table(M,y,[70,28,28,30,30],['Défense','Tirs','Buts','%','Pertes'],dr)+5}
   shotBlock('Défense · tirs adverses',op,'opp');
