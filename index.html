@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-title" content="Banc2Touche">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1B2057">
-<meta name="b2t-version" content="2026-11-04-1">
+<meta name="b2t-version" content="2026-11-04-2">
 <meta name="description" content="Outils de banc pour coacher les matchs du Massy Essonne Handball">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-04-1">
-<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-04-1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-04-2">
+<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-04-2">
 <title>Banc2Touche</title>
 <style>
-/* Appli installée (version 2026-11-04-1) : mêmes bases que le site, polices embarquées pour le hors-ligne */
+/* Appli installée (version 2026-11-04-2) : mêmes bases que le site, polices embarquées pour le hors-ligne */
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{background:#1B2057}
 body{margin:0;font:14px system-ui,-apple-system,sans-serif}
@@ -431,6 +431,11 @@ h2.sect{margin-top:8px;padding-top:14px;border-top:2px solid var(--line)}
 .lv .act.goal{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .lv.is-opp .act.goal{background:var(--opp);border-color:var(--opp);color:var(--opp-ink)}
 .lv .cagegrid{width:max-content;max-width:100%}
+.espchips{display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr));gap:5px;align-items:center}
+.espchips .lab{padding-right:4px}
+.espchips .chip{min-height:40px;padding:0;font:800 16px/1 var(--display);font-variant-numeric:tabular-nums}
+.espchips .chip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.espchips .chip:disabled{opacity:.35}
 .phchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:6px}
 .phchips .chip{min-height:42px;padding:0 8px;font-size:14px;white-space:normal;line-height:1.1}
 .lv-svg{display:flex;justify-content:center;align-items:center;min-height:0}
@@ -645,7 +650,7 @@ const PHASES=[
   ['pendant','Pendant','Pendant le match',[['stats','Stats'],['gk','Gardien'],['notes','Notes'],'Mi-temps',['bilan','Bilan'],['cage','Cage'],['tactic','Tactique']]],
   ['apres','Après','Après le match',[['report','Rapport'],['history','Historique']]]];
 const phaseOf=v=>(PHASES.find(p=>p[3].some(it=>Array.isArray(it)&&it[0]===v))||PHASES[1])[0];
-const UI0={czBy:'zone',czEsp:'',bilBy:'zone',czSide:'opp',czZone:'',czPer:0,czView:'gk',czGk:'',autoSwap:true,half:1,team:'us',p:null,zone:null,xy:null,cage:null,phase:'placed',oppDef:'0-6',gk:'',pick:null,gkSide:'us',gkSel:'',gkPer:0,noteTag:'',noteFilter:'',noteDraft:'',noteMin:'',bilPer:1,repPer:0,confirmDel:null,tdel:null,tsel:null,tconf:false};
+const UI0={esp:null,czBy:'zone',czEsp:'',bilBy:'zone',czSide:'opp',czZone:'',czPer:0,czView:'gk',czGk:'',autoSwap:true,half:1,team:'us',p:null,zone:null,xy:null,cage:null,phase:'placed',oppDef:'0-6',gk:'',pick:null,gkSide:'us',gkSel:'',gkPer:0,noteTag:'',noteFilter:'',noteDraft:'',noteMin:'',bilPer:1,repPer:0,confirmDel:null,tdel:null,tsel:null,tconf:false};
 const S={m:null,mode:'match',tview:'team',tp:null,view:'stats',lastV:{avant:'match',pendant:'stats',apres:'report'},ui:Object.assign({},UI0),tac:null,sync:'local'};
 const MC={};               // copies des matchs en mémoire
 let IDX=LS.get('hb.idx',[]); if(!Array.isArray(IDX))IDX=[];
@@ -802,7 +807,7 @@ function oppNums(){
 function evText(e){
   const who=e.team==='us'?(e.p?pLab(e.p):'Nous'):(e.p?'Adv. n°'+e.p:'Adversaire');
   const what=e.type==='shot'?RTXT[e.res]:(e.team==='opp'&&e.type==='loss'?'Perte adverse':TYPEL[e.type]);
-  const b=[what,who];if(e.zone)b.push(e.zone);if(e.cage)b.push('cage '+e.cage);if(e.phase&&e.phase!=='placed'&&e.type==='shot'&&!(e.phase==='seven'&&e.zone==='7M'))b.push(PHS[e.phase]);
+  const b=[what,who];if(e.zone)b.push(e.zone);if(e.esp)b.push('espace '+e.esp);if(e.cage)b.push('cage '+e.cage);if(e.phase&&e.phase!=='placed'&&e.type==='shot'&&!(e.phase==='seven'&&e.zone==='7M'))b.push(PHS[e.phase]);
   return b.join(' · ');
 }
 function insights(m,L){
@@ -863,12 +868,12 @@ function commit(type,res){
   if(type==='shot'){
     let zone=u.zone,x=u.xy?u.xy.x:null,y=u.xy?u.xy.y:null;
     if(u.phase==='seven'){zone='7M';x=10;y=7}
-    Object.assign(e,{res,zone,x,y,cage:u.cage,phase:u.phase});
+    Object.assign(e,{res,zone,x,y,cage:u.cage,phase:u.phase,esp:u.phase==='seven'?null:(u.esp||null)});
     if(u.team==='opp')e.gk=u.gk||null;
   }
   if(u.team==='us')e.def=u.oppDef;
   m.events.push(e);touch();
-  u.p=null;u.zone=null;u.xy=null;u.cage=null;u.phase='placed';
+  u.p=null;u.zone=null;u.xy=null;u.cage=null;u.esp=null;u.phase='placed';
   const swap=u.autoSwap&&(type==='loss'||res==='goal'||res==='saved'||res==='miss');
   if(swap)u.team=u.team==='us'?'opp':'us';
   renderView();renderHeader();
@@ -1099,8 +1104,7 @@ function vStats(){
   if(!u.gk||!pById(u.gk))u.gk=defaultGK();
   const labels=ZONES.filter(z=>z[0]!=='7M').map(z=>`<text class="zl ${u.zone===z[0]?'on':''}" x="${z[2]}" y="${z[3]}">${z[0]}</text>`).join('');
   const mk=u.xy?`<circle class="mk" cx="${u.xy.x}" cy="${u.xy.y}" r=".55"/>`:'';
-  const esp=u.xy&&u.phase!=='seven'?espOf({x:u.xy.x,y:u.xy.y,zone:u.zone}):null;
-  const selBits=[us&&u.p&&pById(u.p)?pLab(u.p):null,u.phase==='seven'?'Jet de 7 m':(u.zone?ZL[u.zone]+(esp?` · espace ${esp}`:''):null),u.cage?'cage '+u.cage:null,u.phase!=='placed'&&u.phase!=='seven'?PHS[u.phase].toLowerCase():null].filter(Boolean);
+  const selBits=[us&&u.p&&pById(u.p)?pLab(u.p):null,u.phase==='seven'?'Jet de 7 m':(u.zone?ZL[u.zone]:null),u.esp&&u.phase!=='seven'?'espace '+u.esp:null,u.cage?'cage '+u.cage:null,u.phase!=='placed'&&u.phase!=='seven'?PHS[u.phase].toLowerCase():null].filter(Boolean);
   const feed=m.events.slice(-6).reverse();
   const teamName=us?'Nous':'Adversaire';
   const tiles=us
@@ -1115,11 +1119,12 @@ function vStats(){
   <section class="card lv-players"><div class="card-head"><h2>${us?'Joueur':'Notre gardien'}</h2><span class="hint">${us?'Facultatif':'Face au tir'}</span></div>${tiles}</section>
   <section class="card lv-court"><div class="card-head"><h2>Où ?</h2><span class="hint">Touche l’endroit du tir · facultatif</span></div>
     <div class="lv-svg">${courtSVG({act:'court',id:'zpick',extra:labels+mk,label:'Choix de l’endroit du tir'})}</div>
+    <div class="espchips" role="group" aria-label="Espace de tir, de gauche à droite vu du tireur"><span class="lab">Espace</span>${ESP.map(k=>`<button class="chip" data-act="esp" data-v="${k}" aria-pressed="${u.esp===k}" ${u.phase==='seven'?'disabled':''}>${k}</button>`).join('')}</div>
     <div class="phchips" role="group" aria-label="Phase de jeu">${PH_LIVE.map(([k,l])=>`<button class="chip" data-act="phase" data-v="${k}" aria-pressed="${u.phase===k}">${l}</button>`).join('')}</div>
   </section>
   <section class="card lv-shot">
     <div class="card-head"><h2>Tir de <span class="who">${teamName}</span></h2>${selBits.length||u.phase!=='placed'?'<button class="btn ghost sm" data-act="clearSel">Effacer</button>':''}</div>
-    <div class="sel">${selBits.length?esc(selBits.join(' · ')):'<span class="ph">Joueur, endroit et cage facultatifs</span>'}</div>
+    <div class="sel">${selBits.length?esc(selBits.join(' · ')):'<span class="ph">Joueur, endroit, espace et cage facultatifs</span>'}</div>
     <div class="f">Zone de cage · facultatif<div class="cagegrid" role="group" aria-label="Zone de cage, vue du tireur">${[1,2,3,4,5,6,7,8,9].map(i=>`<button data-act="cage" data-v="${i}" aria-pressed="${u.cage===i}" aria-label="${CAGEL[i]}">${i}</button>`).join('')}</div></div>
     <div class="acts">
       <button class="act goal" data-act="ev" data-type="shot" data-res="goal">But</button>
@@ -1199,15 +1204,10 @@ function vTactic(){
 const ZPOS={'AIL-G':[1.55,2.8],'AIL-D':[18.45,2.8],'6M-G':[5.2,7.6],'6M-C':[10,7.75],'6M-D':[14.8,7.6],'9M-G':[4.3,10.9],'9M-C':[10,10.6],'9M-D':[15.7,10.9],'LOIN':[10,13.2],'7M':[10,3.2]};
 /* ---------- Espaces entre défenseurs : 0-1 … 6-0, de gauche à droite vu du tireur ---------- */
 const ESP=['0-1','1-2','2-3','3-4','4-5','5-6','6-0'];
-// Angles (degrés, depuis le centre du but) des 6 défenseurs d'une 0-6 : les espaces sont entre eux
+// Repères visuels : angles (degrés, depuis le centre du but) des 6 défenseurs d'une 0-6
 const ESP_B=[-72,-45,-16,16,45,72];
 const ESPPOS={'0-1':[1.6,1.7],'1-2':[3.3,6.3],'2-3':[6.6,10.5],'3-4':[10,11.7],'4-5':[13.4,10.5],'5-6':[16.7,6.3],'6-0':[18.4,1.7]};
-function espOf(e){
-  if(!e||e.zone==='7M'||e.phase==='seven')return null;
-  let x=e.x,y=e.y;
-  if(x==null||y==null){const z=ZPOS[e.zone];if(!z)return null;x=z[0];y=z[1]}
-  const a=Math.atan2(x-10,Math.max(.3,y))*180/Math.PI;let i=0;while(i<6&&a>ESP_B[i])i++;return ESP[i];
-}
+function espOf(e){return e&&e.esp&&ESP.includes(e.esp)&&e.phase!=='seven'&&e.zone!=='7M'?e.esp:null}
 function espRays(){
   return ESP_B.map(a=>{const r=a*Math.PI/180,s=Math.sin(r),c=Math.cos(r);let t=30;if(s<0)t=Math.min(t,-10/s);if(s>0)t=Math.min(t,10/s);if(c>0)t=Math.min(t,14.4/c);
     return `<line class="esp-ray" x1="10" y1="0" x2="${(10+t*s).toFixed(2)}" y2="${(t*c).toFixed(2)}"/>`}).join('');
@@ -1365,7 +1365,7 @@ function vCage(){
   <div class="cz3 fx">
     <div class="card cz-court"><div class="card-head"><div class="seg" role="group" aria-label="Provenance">${[['zone','Par zone'],['esp','Par espace']].map(([v,l])=>`<button data-act="czBy" data-v="${v}" aria-pressed="${(u.czBy||'zone')===v}">${l}</button>`).join('')}</div><button class="chip" data-act="${act}" data-v="" aria-pressed="${!cur}">Tout</button></div>
       <div class="cz-svg">${courtSVG({extra:bubbles,label:'Choix de la provenance des tirs'})}</div>
-      <p class="hint">${byEsp?'Espaces entre les 6 défenseurs, de gauche à droite vu du tireur. ':''}Le chiffre indique le nombre de tirs.</p>
+      <p class="hint">${byEsp?'Espaces choisis à la saisie, de gauche à droite vu du tireur. ':''}Le chiffre indique le nombre de tirs.</p>
     </div>
     <div class="card cz-goal"><div class="card-head"><div><span class="lab">${side==='opp'?'Tirs adverses':'Nos tirs'} · ${viewTxt}</span><h2 style="margin-top:4px">${cur?esc(nameOf(cur)):(byEsp?'Tous les espaces':'Toutes les zones')}</h2></div><p class="czstat">${stat}</p></div>
       ${goalSVG(cells,side,view)}
@@ -1407,7 +1407,7 @@ function vReport(){
     <div class="card"><h2>Par zone de tir</h2>${tbl(['Zone','Nous','Eff.','Adversaire','Eff.'],zr)}</div>
     <div class="card"><h2>Par phase de jeu</h2>${tbl(['Phase','Nous','Eff.','Adversaire','Eff.'],phr)}</div>
   </div>
-  <div class="card"><h2>Par espace (0-1 … 6-0)</h2>${tbl(['Espace','Nous','Eff.','Adversaire','Eff.'],er)}<p class="hint">Espaces entre les 6 défenseurs, de gauche à droite vu du tireur, calculés à partir de l’endroit touché sur le terrain.</p></div>
+  <div class="card"><h2>Par espace (0-1 … 6-0)</h2>${tbl(['Espace','Nous','Eff.','Adversaire','Eff.'],er)}<p class="hint">Espaces entre les 6 défenseurs, de gauche à droite vu du tireur, choisis pendant la saisie des tirs.</p></div>
   <div class="card"><h2>Contre chaque défense adverse</h2>${tbl(['Défense','Tirs','Buts','Eff.','Pertes'],dr)}</div>
   <div class="card"><h2>Notes<span class="count">${m.notes.length}</span></h2>${m.notes.length?`<ul class="notes">${m.notes.slice().sort((a,b)=>a.ts-b.ts).map(n=>`<li style="grid-template-columns:1fr"><div><div class="meta"><span>${HALFL[n.half]||''}</span><span>${hhmm(n.ts)}</span>${n.min?`<span>${esc(n.min)}e min</span>`:''}${n.tag?`<span class="pill">${esc(n.tag)}</span>`:''}</div><p>${esc(n.text)}</p></div></li>`).join('')}</ul>`:'<p class="hint">Aucune note.</p>'}</div>`;
 }
@@ -1695,11 +1695,14 @@ async function exportSnap(id){
   const name=`banc2touche-${slug(BKM.device||'appareil')}-copie-${ds}-${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}.json`;
   await saveFile(name,new Blob([JSON.stringify(sn.data)],{type:'application/json'}),'Copie enregistrée : '+name);
 }
+function snapHTML(){
+  const u=S.ui,snaps=u.snaps||[];
+  return u.snapsOk===false?'<p class="hint">Les copies automatiques ne sont pas disponibles sur cet appareil.</p>':snaps.length?`<ul class="snaps">${snaps.map(sn=>`<li><span class="si"><b>${esc(new Date(sn.id).toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</b><small>${esc(sn.reason||'')} · ${plural(sn.np,'joueur')} · ${plural(sn.nm,'match')}</small></span>${u.snapConf===sn.id?`<button class="btn danger sm" data-act="snapRestore" data-id="${sn.id}">Remplacer mes données</button><button class="btn ghost sm" data-act="snapNo">Non</button>`:`<button class="btn sm" data-act="snapAsk" data-id="${sn.id}">Restaurer</button><button class="btn ghost sm" data-act="snapExport" data-id="${sn.id}">Enregistrer</button>`}</li>`).join('')}</ul>`:'<p class="hint">Aucune copie pour l’instant.</p>';
+}
 function vBackup(){
   const u=S.ui,ms=realMatches(),np=TEAM.example?0:TEAM.players.length,imp=u.imp,need=needBackup();
-  if(u.snaps==null&&!u.snapsLoading){u.snapsLoading=true;snapList().then(l=>{u.snaps=l||[];u.snapsOk=!!l;u.snapsLoading=false;if(S.mode==='team'&&S.tview==='backup')renderView()})}
+  if(u.snaps==null&&!u.snapsLoading){u.snapsLoading=true;snapList().then(l=>{u.snaps=l||[];u.snapsOk=!!l;u.snapsLoading=false;const el=$('#snapbox');if(el)el.innerHTML=snapHTML()})}
   const status=BKM.lastExport?`Dernière sauvegarde ${relTime(BKM.lastExport)}.`:'Aucune sauvegarde enregistrée depuis cet appareil.';
-  const snaps=u.snaps||[];
   return `<div class="pane-head"><div><h1>Sauvegarde</h1><p class="hint">${APP?'Dans l’appli, les données ne sont que sur cet iPad. Range une sauvegarde dans iCloud Drive après chaque match.':'Sur ce site, tes données sont enregistrées dans ton compte. La sauvegarde sert à les passer dans l’appli de l’iPad.'}</p></div></div>
   <div class="bkgrid">
     <div class="card"><h2>Cet appareil</h2>
@@ -1727,7 +1730,7 @@ function vBackup(){
     </div>
     <div class="card"><div class="card-head"><h2>Copies automatiques</h2><button class="btn sm" data-act="snapNow" ${np||ms.length?'':'disabled'}>Faire une copie</button></div>
       <p class="hint">Les 12 dernières copies restent sur cet appareil : à l’ouverture, en fin de match et avant chaque import. Elles servent à revenir en arrière après une erreur, mais disparaissent si l’appli est supprimée.</p>
-      ${u.snapsOk===false?'<p class="hint">Les copies automatiques ne sont pas disponibles sur cet appareil.</p>':snaps.length?`<ul class="snaps">${snaps.map(sn=>`<li><span class="si"><b>${esc(new Date(sn.id).toLocaleString('fr-FR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</b><small>${esc(sn.reason||'')} · ${plural(sn.np,'joueur')} · ${plural(sn.nm,'match')}</small></span>${u.snapConf===sn.id?`<button class="btn danger sm" data-act="snapRestore" data-id="${sn.id}">Remplacer mes données</button><button class="btn ghost sm" data-act="snapNo">Non</button>`:`<button class="btn sm" data-act="snapAsk" data-id="${sn.id}">Restaurer</button><button class="btn ghost sm" data-act="snapExport" data-id="${sn.id}">Enregistrer</button>`}</li>`).join('')}</ul>`:'<p class="hint">Aucune copie pour l’instant.</p>'}
+      <div id="snapbox">${snapHTML()}</div>
     </div>
   </div>
   ${(()=>{const mv=document.querySelector('meta[name="b2t-version"]');return mv?`<p class="hint">Version de l’appli : <strong>${esc(mv.content)}</strong></p>`:''})()}`;
@@ -1940,9 +1943,10 @@ document.addEventListener('click',e=>{
     case 'autoSwap':u.autoSwap=!u.autoSwap;saveUI();renderView();break;
     case 'selP':u.p=u.p===id?null:id;renderView();break;
     case 'court':courtTap(e,el.closest('svg'));break;
-    case 'clearSel':Object.assign(u,{p:null,zone:null,xy:null,cage:null,phase:'placed'});renderView();break;
+    case 'clearSel':Object.assign(u,{esp:null,p:null,zone:null,xy:null,cage:null,phase:'placed'});renderView();break;
     case 'cage':u.cage=u.cage===+v?null:+v;renderView();break;
-    case 'phase':u.phase=u.phase===v&&v!=='placed'?'placed':v;if(u.phase==='seven'){u.xy=null;u.zone=null}renderView();break;
+    case 'phase':u.phase=u.phase===v&&v!=='placed'?'placed':v;if(u.phase==='seven'){u.xy=null;u.zone=null;u.esp=null}renderView();break;
+    case 'esp':if(u.phase!=='seven'){u.esp=u.esp===v?null:v;renderView()}break;
     case 'ev':commit(el.dataset.type,el.dataset.res);break;
     case 'delEv':removeEv(id,true);break;
     case 'undo':{const last=m.events[m.events.length-1];if(last)removeEv(last.id,true);break}
