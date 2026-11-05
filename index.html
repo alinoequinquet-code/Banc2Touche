@@ -8,14 +8,14 @@
 <meta name="apple-mobile-web-app-title" content="Banc2Touche">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1B2057">
-<meta name="b2t-version" content="2026-11-04-4">
+<meta name="b2t-version" content="2026-11-05-1">
 <meta name="description" content="Outils de banc pour coacher les matchs du Massy Essonne Handball">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-04-4">
-<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-04-4">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026-11-05-1">
+<link rel="icon" type="image/png" href="icon-192.png?v=2026-11-05-1">
 <title>Banc2Touche</title>
 <style>
-/* Appli installée (version 2026-11-04-4) : mêmes bases que le site, polices embarquées pour le hors-ligne */
+/* Appli installée (version 2026-11-05-1) : mêmes bases que le site, polices embarquées pour le hors-ligne */
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{background:#1B2057}
 body{margin:0;font:14px system-ui,-apple-system,sans-serif}
@@ -461,6 +461,14 @@ h2.sect{margin-top:8px;padding-top:14px;border-top:2px solid var(--line)}
 @media (max-width:1020px){.cz3{grid-template-columns:minmax(0,1fr);grid-template-areas:"court" "goal" "trend"}}
 .cz-svg{display:flex;justify-content:center;min-height:0}
 .bil{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
+.bil2{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.bil2>.full{grid-column:1/-1}
+.bil2 .kpis.bk{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bil2 .zm-svg .court{width:100%;max-width:560px;height:auto}
+.bil2 table{font-size:17px}
+.bil2 td strong{font-size:19px}
+@media (max-width:1000px){.bil2>.tb,.bil2>.zm{grid-column:1/-1}.bil2 .kpis.bk{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:680px){.bil2{grid-template-columns:minmax(0,1fr)}.bil2 .kpis.bk{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .bcol{display:flex;flex-direction:column;gap:12px;min-width:0}
 .kpis.bk{grid-template-columns:repeat(2,minmax(0,1fr))}
 .kpis.bk .kpi .v{font-size:34px}
@@ -1254,33 +1262,31 @@ function vBilan(){
   const phRows=PH.map(([k,l])=>{const a=us.filter(e=>e.phase===k),b=op.filter(e=>e.phase===k);if(!a.length&&!b.length)return null;return[l,`${goals(a)}/${a.length}`,pct(goals(a),a.length),`${goals(b)}/${b.length}`,pct(goals(b),b.length)]}).filter(Boolean);
   const keys=(m.scout.keys||'').split('\n').map(s=>s.trim()).filter(Boolean);
   const per=u.bilPer?HALFL[u.bilPer]:'Match complet';
-  const scorers=m.players.map(p=>{const a=us.filter(e=>e.p===p.id);return{p,t:a.length,g:goals(a),lo:L.filter(e=>e.team==='us'&&e.type==='loss'&&e.p===p.id).length}}).filter(r=>r.t||r.lo).sort((a,b)=>b.g-a.g||a.t-b.t);
+  const isGk=p=>p.pos==='GB';
+  const scorers=m.players.filter(p=>!isGk(p)||us.some(e=>e.p===p.id)).map(p=>{const a=us.filter(e=>e.p===p.id),s7=a.filter(e=>e.phase==='seven'||e.zone==='7M');return{p,t:a.length,g:goals(a),t7:s7.length,g7:goals(s7),lo:L.filter(e=>e.team==='us'&&e.type==='loss'&&e.p===p.id).length}}).sort((a,b)=>b.g-a.g||b.t-a.t||numSort(a.p,b.p));
+  const noP=us.filter(e=>!e.p).length,noPl=L.filter(e=>e.team==='us'&&e.type==='loss'&&!e.p).length;
+  const gkRows=gks().map(p=>{const g=gkStat(L,'us',p.id);return g.t?[`n°${esc(p.num||'?')}`,esc(p.name),`<strong>${g.s}</strong>`,g.t,pct(g.s,g.t),g.t-g.s]:null}).filter(Boolean);
   const nz=a=>{const n=a.filter(e=>!e.zone).length;return n?`<p class="hint">${n} tir${n>1?'s':''} sans endroit noté.</p>`:''};
   const byEsp=u.bilBy==='esp';
   const map=(a,team)=>byEsp?espMap(a,team):zoneMap(a,team);
   return `${banner()}<div class="pane-head"><div><h1>Bilan express</h1><p class="hint">${per} · ${L.length} action${L.length>1?'s':''} relevée${L.length>1?'s':''}. À montrer à la mi-temps ou pendant un temps mort.</p></div>
     <div class="row"><div class="seg" role="group" aria-label="Provenance des tirs">${[['zone','Par zone'],['esp','Par espace']].map(([v,l])=>`<button data-act="bilBy" data-v="${v}" aria-pressed="${(u.bilBy||'zone')===v}">${l}</button>`).join('')}</div>${perChips('bilPer',u.bilPer,true)}</div></div>
-  <div class="bil fx">
-    <div class="bcol">
-      <div class="kpis bk">
-        <div class="kpi"><span class="lab">Buts</span><div class="v"><span class="us">${goals(us)}</span><em>–</em><span class="op">${goals(op)}</span></div><small>Nous – adversaire</small></div>
-        <div class="kpi"><span class="lab">Au tir</span><div class="v"><span class="us">${pct(goals(us),us.length)}</span><em>/</em><span class="op">${pct(goals(op),op.length)}</span></div><small>${goals(us)}/${us.length} · ${goals(op)}/${op.length}</small></div>
-        <div class="kpi"><span class="lab">Pertes</span><div class="v"><span class="us">${cnt(L,'us','loss')}</span><em>/</em><span class="op">${cnt(L,'opp','loss')}</span></div><small>Nous / adversaire</small></div>
-        <div class="kpi"><span class="lab">% arrêts</span><div class="v"><span class="us">${pct(gU.s,gU.t)}</span><em>/</em><span class="op">${pct(gO.s,gO.t)}</span></div><small>${gU.s}/${gU.t} · ${gO.s}/${gO.t}</small></div>
-      </div>
-      <div class="card grow"><h2>Ce que disent les chiffres</h2>${ins.length?`<ul class="ins">${ins.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'<p class="hint">Pas encore assez d’actions relevées pour dégager une tendance.</p>'}</div>
+  <div class="bil2">
+    <div class="kpis bk full">
+      <div class="kpi"><span class="lab">Buts</span><div class="v"><span class="us">${goals(us)}</span><em>–</em><span class="op">${goals(op)}</span></div><small>Nous – adversaire</small></div>
+      <div class="kpi"><span class="lab">Au tir</span><div class="v"><span class="us">${pct(goals(us),us.length)}</span><em>/</em><span class="op">${pct(goals(op),op.length)}</span></div><small>${goals(us)}/${us.length} · ${goals(op)}/${op.length}</small></div>
+      <div class="kpi"><span class="lab">Pertes</span><div class="v"><span class="us">${cnt(L,'us','loss')}</span><em>/</em><span class="op">${cnt(L,'opp','loss')}</span></div><small>Nous / adversaire</small></div>
+      <div class="kpi"><span class="lab">% arrêts</span><div class="v"><span class="us">${pct(gU.s,gU.t)}</span><em>/</em><span class="op">${pct(gO.s,gO.t)}</span></div><small>nos GB ${gU.s}/${gU.t} · leur GB ${gO.s}/${gO.t}</small></div>
     </div>
-    <div class="bcol">
-      <div class="card zm"><div class="card-head"><span class="lab"><i class="dot us"></i>Nos tirs · ${goals(us)}/${us.length} · ${pct(goals(us),us.length)}</span><div class="legend"><span><i class="win"></i>Bon</span><span><i class="lose"></i>À corriger</span></div></div><div class="zm-svg">${map(us,'us')}</div>${byEsp?'':espStrip(us,'us')}${nz(us)}</div>
-      <div class="card grow"><h2>Rappel des consignes</h2>${keys.length?`<ol class="keys">${keys.map(k=>`<li>${esc(k)}</li>`).join('')}</ol>`:'<p class="hint">Aucune consigne. Ajoute-les dans la fiche adversaire.</p>'}</div>
-    </div>
-    <div class="bcol">
-      <div class="card zm"><div class="card-head"><span class="lab"><i class="dot opp"></i>Tirs adverses · ${goals(op)}/${op.length} · ${pct(goals(op),op.length)}</span></div><div class="zm-svg">${map(op,'opp')}</div>${byEsp?'':espStrip(op,'opp')}${nz(op)}</div>
-      <div class="card grow">
-        ${scorers.length?`<h2>Par joueur</h2>${tbl(['Joueur','Buts','Tirs','%','Pertes'],scorers.slice(0,8).map(r=>[esc(pLab(r.p.id)),`<strong>${r.g}</strong>`,r.t,pct(r.g,r.t),r.lo]))}`:''}
-        <h2>Par phase de jeu</h2>${tbl(['Phase','Nous','Eff.','Adv.','Eff.'],phRows)}
-      </div>
-    </div>
+    <div class="card"><h2>Ce que disent les chiffres</h2>${ins.length?`<ul class="ins">${ins.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:'<p class="hint">Pas encore assez d’actions relevées pour dégager une tendance.</p>'}</div>
+    <div class="card"><h2>Rappel des consignes</h2>${keys.length?`<ol class="keys">${keys.map(k=>`<li>${esc(k)}</li>`).join('')}</ol>`:'<p class="hint">Aucune consigne. Ajoute-les dans la fiche adversaire.</p>'}</div>
+    <div class="card zm"><div class="card-head"><span class="lab"><i class="dot us"></i>Nos tirs · ${goals(us)}/${us.length} · ${pct(goals(us),us.length)}</span><div class="legend"><span><i class="win"></i>Bon</span><span><i class="lose"></i>À corriger</span></div></div><div class="zm-svg">${map(us,'us')}</div>${byEsp?'':espStrip(us,'us')}${nz(us)}</div>
+    <div class="card zm"><div class="card-head"><span class="lab"><i class="dot opp"></i>Tirs adverses · ${goals(op)}/${op.length} · ${pct(goals(op),op.length)}</span><div class="legend"><span><i class="win"></i>Bien défendu</span><span><i class="lose"></i>À corriger</span></div></div><div class="zm-svg">${map(op,'opp')}</div>${byEsp?'':espStrip(op,'opp')}${nz(op)}</div>
+    <div class="card full"><div class="card-head"><h2>Nos joueurs</h2><span class="hint">Triés par buts</span></div>
+      ${tbl(['N°','Joueur','Poste','Buts','Tirs','% au tir','7 m','Pertes'],scorers.map(r=>[esc(r.p.num||'–'),esc(r.p.name),esc(r.p.pos||''),`<strong>${r.g}</strong>`,r.t||'–',r.t?pct(r.g,r.t):'–',r.t7?`${r.g7}/${r.t7}`:'–',r.lo||'–']),[0,1,2])}
+      ${noP||noPl?`<p class="hint">${noP?`${plural(noP,'tir')} sans joueur noté`:''}${noP&&noPl?' · ':''}${noPl?`${plural(noPl,'perte')} sans joueur noté`:''}.</p>`:''}</div>
+    <div class="card tb"><h2>Nos gardiens</h2>${tbl(['N°','Gardien','Arrêts','Tirs cadrés','% arrêts','Buts pris'],gkRows,[0,1])}</div>
+    <div class="card tb"><h2>Par phase de jeu</h2>${tbl(['Phase','Nous','Eff.','Adv.','Eff.'],phRows)}</div>
   </div>`;
 }
 
@@ -1898,7 +1904,7 @@ const TEAM_NAV=[['team','Joueurs'],['season','Saison'],['backup','Sauvegarde']];
 const VIEWS={cage:vCage,match:vMatch,compo:vCompo,scout:vScout,stats:vStats,gk:vGK,notes:vNotes,tactic:vTactic,bilan:vBilan,report:vReport,history:vHistory};
 function renderView(){
   const v=$('#view');
-  document.body.classList.toggle('fit',S.mode==='match'&&phaseOf(S.view)==='pendant');
+  document.body.classList.toggle('fit',S.mode==='match'&&phaseOf(S.view)==='pendant'&&!['bilan','cage'].includes(S.view));
   if(S.mode==='team'){v.innerHTML=(TVIEWS[S.tview]||vTeam)();return}
   v.innerHTML=(VIEWS[S.view]||vStats)();
   if(S.view==='tactic')bindTactic();
