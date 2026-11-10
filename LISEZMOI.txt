@@ -15,5 +15,14 @@ BANC2TOUCHE · appli iPad (MEHB)
    - Effectif > Sauvegarde > Choisir un fichier : prends le fichier effectif-mehb-hand7-12-16.json
      (garde-le sur l'iPad, ne le mets pas en ligne : il contient les noms et dates de naissance).
 
+4. Demander une connexion (facultatif) :
+   - il faut le serveur Banc2Touche (dépôt ATELIER_RENDER_2026, déployé sur Render) ;
+   - dans index.html, ligne <meta name="b2t-api" content="">, mets l'adresse du serveur entre les guillemets,
+     par exemple content="https://b2t-api-xxxx.onrender.com", puis « Commit changes » ;
+   - l'appli demande alors un identifiant et un mot de passe à l'ouverture. Seul le responsable crée les comptes,
+     change les mots de passe et retire les accès (Effectif > Compte) ;
+   - la première connexion de chaque appareil demande du réseau : fais-la avant d'aller au gymnase.
+   Tant que cette ligne reste vide, l'appli s'ouvre sans connexion, comme avant.
+
 Les données restent sur l'iPad. Fais une sauvegarde après chaque match (Effectif > Sauvegarde > Enregistrer une sauvegarde).
 Ne supprime pas l'appli de l'écran d'accueil sans sauvegarde : ses données seraient effacées.
