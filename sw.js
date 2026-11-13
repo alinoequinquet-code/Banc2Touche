@@ -1,6 +1,6 @@
-// Banc2Touche : hors connexion et mises à jour (version 2026-11-13-1)
-const CACHE='banc2touche-2026-11-13-1';
-const ASSETS=["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "jspdf.umd.min.js", "barlow-400.woff2", "barlow-500.woff2", "barlow-600.woff2", "barlow-700.woff2", "barlow-condensed-600.woff2", "barlow-condensed-700.woff2", "barlow-condensed-800.woff2", "barlow-condensed-700-italic.woff2", "barlow-condensed-800-italic.woff2"];
+// Banc2Touche : hors connexion et mises à jour (version 2026-11-13-2)
+const CACHE='banc2touche-2026-11-13-2';
+const ASSETS=["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "jspdf.umd.min.js", "archivo.woff2"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 const offline=()=>new Response('Hors connexion',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});
